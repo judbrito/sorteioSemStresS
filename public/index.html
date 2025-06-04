@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio de Emojis</title>
+    <link rel="stylesheet" href="style.css">
+
+    </head>
+<body>
+    <div class="container">
+        <h1>Sorteio da Melhor Sequência de Emojis!</h1>
+
+        <div class="panel">
+            <h2>Participe do Sorteio!</h2>
+            <div class="dashboard-info">
+                Participantes Atuais: <span id="participantes-count">0</span>
+                <br>
+                Limite de Participantes: <span id="limite-participantes">N/A</span>
+            </div>
+
+            <div class="dashboard-info" style="margin-top: 15px; padding: 10px; background-color: #e0f7fa; border-radius: 8px;">
+                <strong>Sequência Alvo Atual:</strong> <span id="target-emoji-sequence" style="font-size: 1.8em; font-weight: bold; color: #00796b;"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="nome">Seu Nome:</label>
+                <input type="text" id="nome" placeholder="Digite seu nome" required>
+            </div>
+            <button id="participar-btn">Participar!</button>
+            <div id="message" class="hidden"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Ação do Sorteio</h2>
+            <button id="sortear-btn">Realizar Sorteio Agora!</button>
+            <div id="winner-board" style="display: none; margin-top: 20px;">
+                <h3>🎉 Últimos Ganhadores! 🎉</h3>
+                <p>Sorteio realizado em: <span id="last-draw-time">N/A</span></p>
+                <ul class="winner-list" id="ganhadores-list">
+                    </ul>
+            </div>
+        </div>
+
+
+        <div class="panel">
+            <h2>Participantes Cadastrados</h2>
+            <ul id="participantes-list">
+                </ul>
+        </div>
+
+        <div class="panel admin-panel">
+            <h2>Painel Administrativo</h2>
+
+            <div id="admin-login-section">
+                <h3>Login</h3>
+                <div class="form-group">
+                    <label for="admin-user">Usuário:</label>
+                    <input type="text" id="admin-user" placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label for="admin-pass">Senha:</label>
+                    <input type="password" id="admin-pass" placeholder="123">
+                </div>
+                <button id="admin-login-btn">Entrar como Admin</button>
+                <div id="admin-message" class="hidden"></div>
+            </div>
+
+            <div id="admin-controls-section" style="display: none;">
+                <h3>Controles</h3>
+                <div class="form-group">
+                    <label for="new-limit">Limite de Participantes:</label>
+                    <input type="number" id="new-limit" min="1" value="10">
+                </div>
+                <div class="form-group">
+                    <label for="num-winners">Número de Premiados:</label>
+                    <input type="number" id="num-winners" min="1" value="1">
+                </div>
+                <button id="update-config-btn">Atualizar Configurações</button>
+                <button id="reset-sorteio-btn" class="danger-btn">Resetar Sorteio (Apaga tudo!)</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Histórico de Sorteios</h2>
+            <ul id="sorteios-list">
+                </ul>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
