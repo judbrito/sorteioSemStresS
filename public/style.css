@@ -3,14 +3,14 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Alinha no topo para que o conteúdo não fique espremido */
+    flex-direction: column; /* Altera para coluna para que o título fique em cima */
+    justify-content: flex-start; /* Começa o conteúdo do topo */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
     min-height: 100vh;
     background-color: #f0f2f5;
     color: #333;
     padding: 20px;
     box-sizing: border-box;
-    flex-wrap: wrap; /* Permite que os painéis quebrem para a linha de baixo em telas menores */
 }
 
 h1 {
@@ -18,27 +18,28 @@ h1 {
     text-align: center;
     color: #0056b3;
     margin-bottom: 30px;
-    font-size: 2.5em;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    font-size: 2.8em; /* Um pouco maior */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.15); /* Sombra mais suave */
 }
 
 .container {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px; /* Espaço entre os painéis */
-    max-width: 1200px; /* Largura máxima do layout */
+    gap: 25px; /* Mais espaço entre os painéis */
+    max-width: 1280px; /* Largura máxima do layout aumentada */
     width: 100%;
-    justify-content: center; /* Centraliza os painéis quando há espaço */
+    justify-content: center; /* Centraliza os painéis */
+    align-items: flex-start; /* Alinha os painéis pelo topo */
 }
 
 .panel {
     background-color: #fff;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra mais proeminente */
     flex: 1; /* Permite que o painel cresça e encolha */
     min-width: 300px; /* Largura mínima para evitar que fiquem muito pequenos */
-    max-width: 400px; /* Largura máxima para cada painel */
+    max-width: 420px; /* Largura máxima para cada painel */
     display: flex;
     flex-direction: column;
     gap: 15px; /* Espaço entre os elementos dentro do painel */
@@ -51,6 +52,7 @@ h2 {
     margin-bottom: 20px;
     border-bottom: 2px solid #e0f7fa;
     padding-bottom: 10px;
+    font-size: 1.8em; /* Um pouco maior */
 }
 
 .form-group {
@@ -59,20 +61,23 @@ h2 {
 
 label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px; /* Mais espaço para a label */
     font-weight: bold;
     color: #555;
+    font-size: 1em;
 }
 
 input[type="text"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+textarea { /* Adicionado textarea aqui */
     width: calc(100% - 22px); /* 100% menos padding e borda */
-    padding: 10px;
+    padding: 12px; /* Mais padding */
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 6px; /* Borda mais arredondada */
     font-size: 1em;
-    box-sizing: border-box; /* Inclui padding e borda na largura total */
+    box-sizing: border-box;
+    resize: vertical; /* Permite redimensionar verticalmente o textarea */
 }
 
 button {
@@ -80,23 +85,34 @@ button {
     color: white;
     padding: 12px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px; /* Borda mais arredondada */
     cursor: pointer;
     font-size: 1.1em;
     width: 100%;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    margin-top: 10px; /* Espaço acima dos botões */
+    transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease; /* Adicionado box-shadow na transição */
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 button:hover {
     background-color: #218838;
-    transform: translateY(-2px); /* Pequeno efeito de elevação no hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
-    transform: none; /* Remove o efeito de elevação quando desabilitado */
+    transform: none;
+    box-shadow: none;
+}
+
+.primary-btn { /* Para botões primários adicionais no admin */
+    background-color: #007bff;
+}
+
+.primary-btn:hover {
+    background-color: #0056b3;
 }
 
 .danger-btn { /* Para o botão de reset */
@@ -107,29 +123,51 @@ button:disabled {
     background-color: #c82333;
 }
 
-#message, #admin-message {
-    margin-top: 15px;
+/* Estilos para as mensagens de feedback */
+.message {
     padding: 10px;
+    margin-top: 15px; /* Mais espaço acima */
     border-radius: 5px;
     text-align: center;
     font-weight: bold;
-    display: none; /* Oculta por padrão, só mostra quando há mensagem */
+    display: none; /* Oculta por padrão */
+    opacity: 0; /* Para efeito de fade */
+    transition: opacity 0.5s ease;
 }
 
-#message.success, #admin-message.success {
+.message.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.message:not(.hidden) {
+    display: block; /* Garante que aparece */
+    opacity: 1; /* Mostra */
+}
+
+.message.success {
     background-color: #d4edda;
     color: #155724;
+    border: 1px solid #155724;
 }
 
-#message.error, #admin-message.error {
+.message.error {
     background-color: #f8d7da;
     color: #721c24;
+    border: 1px solid #721c24;
 }
 
-#participantes-list, #sorteios-list, #ganhadores-list.winner-list {
+.message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #0c5460;
+}
+
+
+#participantes-list, #sorteios-list, #ganhadores-list { /* Removido .winner-list da lista de ganhadores aqui */
     list-style: none;
     padding: 0;
-    max-height: 300px; /* Altura máxima com scroll */
+    max-height: 300px;
     overflow-y: auto;
     border: 1px solid #eee;
     border-radius: 5px;
@@ -137,8 +175,8 @@ button:disabled {
     background-color: #fcfcfc;
 }
 
-#participantes-list li, #sorteios-list li, #ganhadores-list li {
-    padding: 10px;
+#participantes-list li, #sorteios-list li {
+    padding: 12px; /* Mais padding */
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
@@ -152,7 +190,7 @@ button:disabled {
     background-color: #f5f5f5;
 }
 
-#participantes-list li:last-child, #sorteios-list li:last-child, #ganhadores-list li:last-child {
+#participantes-list li:last-child, #sorteios-list li:last-child {
     border-bottom: none;
 }
 
@@ -161,49 +199,10 @@ button:disabled {
 }
 
 .emoji-sequence {
-    font-size: 1.2em;
+    font-size: 1.3em; /* Emojis um pouco maiores */
     margin-left: 10px;
-    color: #e65100; /* Cor para a sequência de emojis */
+    color: #e65100;
     font-weight: bold;
-}
-
-.winner-item { /* Estilo para cada ganhador individual no histórico */
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 10px;
-    border-bottom: 1px solid #e0f7fa; /* Borda suave */
-    background-color: #f0fdfc; /* Fundo suave */
-    border-radius: 5px;
-    margin-bottom: 5px;
-}
-.winner-item:last-child {
-    border-bottom: none;
-}
-
-.winner-name {
-    font-weight: bold;
-    color: #0056b3;
-    font-size: 1.1em;
-}
-
-.winner-details {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 0.9em;
-    color: #555;
-}
-
-.winner-details span {
-    background-color: #e9ecef;
-    padding: 3px 8px;
-    border-radius: 4px;
-}
-
-/* Oculta a seção de controle do admin por padrão */
-#admin-controls-section {
-    display: none;
 }
 
 .dashboard-info {
@@ -215,7 +214,7 @@ button:disabled {
     font-size: 1.1em;
     color: #0056b3;
     font-weight: bold;
-    border: 1px solid #cce5ff; /* Borda sutil */
+    border: 1px solid #cce5ff;
 }
 
 .dashboard-info span {
@@ -226,48 +225,47 @@ button:disabled {
 
 /* --- REVISÃO: Estilos para o Quadro de Ganhadores --- */
 #winner-board {
-    display: flex; /* Transforma o contêiner em um flex container */
-    flex-direction: column; /* Organiza os itens em coluna */
-    align-items: center; /* Centraliza horizontalmente os itens (h2, ul) dentro do contêiner flex */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-top: 30px;
-    padding: 20px;
+    padding: 25px; /* Mais padding */
     background-color: #f9f9f9;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: none; /* Inicia oculto, será mostrado via JS */
-    width: 80%; /* Ajuste a largura conforme necessário */
-    max-width: 600px; /* Largura máxima para telas grandes */
-    margin-left: auto; /* Centraliza o bloco #winner-board na página */
-    margin-right: auto; /* Centraliza o bloco #winner-board na página */
-    text-align: center; /* Garante que o texto, se houver, seja centralizado no bloco */
+    border-radius: 10px; /* Borda mais arredondada */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra mais definida */
+    width: 90%; /* Ajuste a largura conforme necessário */
+    max-width: 650px; /* Largura máxima para telas grandes */
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
 #winner-board h3 {
     color: #28a745;
     margin-bottom: 15px;
-    font-size: 1.8em;
-    text-align: center; /* Garante que o título dentro do bloco seja centralizado */
+    font-size: 2em; /* Título maior */
+    text-align: center;
 }
 
 #winner-board p {
-    font-size: 0.9em;
+    font-size: 0.95em;
     color: #777;
     margin-bottom: 10px;
-    text-align: center; /* Garante que o parágrafo dentro do bloco seja centralizado */
+    text-align: center;
 }
 
 /* --- REVISÃO: Estilos para a lista de ganhadores (`#ganhadores-list`) --- */
-#ganhadores-list { /* Removido .winner-list, pois #ganhadores-list já é específico */
+#ganhadores-list {
     list-style: none;
     padding: 0;
-    width: 100%; /* Faz a lista preencher o winner-board */
-    text-align: center; /* Centraliza o texto dos itens da lista */
-    max-height: 300px; /* Altura máxima com scroll, se necessário */
+    width: 100%;
+    text-align: center;
+    max-height: 350px; /* Altura máxima com scroll, se necessário */
     overflow-y: auto;
     border: 1px solid #eee;
-    border-radius: 5px;
-    margin-top: 10px;
+    border-radius: 6px;
+    margin-top: 15px; /* Mais espaço acima */
     background-color: #fcfcfc;
 }
 
@@ -275,16 +273,17 @@ button:disabled {
 #ganhadores-list li {
     background-color: #e9e9e9;
     margin-bottom: 10px;
-    padding: 12px 15px;
-    border-radius: 5px;
-    font-size: 1.1em;
+    padding: 15px 20px; /* Mais padding */
+    border-radius: 8px; /* Borda mais arredondada */
+    font-size: 1.2em; /* Texto maior */
     color: #555;
     border: 1px solid #dcdcdc;
-    display: flex; /* Transforma o item da lista em um flex container */
-    flex-direction: column; /* Organiza o conteúdo (nome, detalhes) em coluna */
-    align-items: center; /* Centraliza o nome e detalhes horizontalmente dentro do item */
-    justify-content: center; /* Centraliza verticalmente (se houver espaço extra) */
-    text-align: center; /* Garante centralização do texto */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Sombra sutil */
 }
 
 #ganhadores-list li:last-child {
@@ -295,10 +294,14 @@ button:disabled {
 #ganhadores-list li .details {
     font-size: 0.9em;
     color: #777;
-    margin-top: 5px;
-    text-align: center; /* Garante centralização para os detalhes também */
+    margin-top: 8px; /* Mais espaço acima */
+    text-align: center;
 }
 
+/* Oculta a seção de controle do admin por padrão */
+#admin-controls-section {
+    display: none;
+}
 
 /* ------------------------------------------------------------------------- */
 /* --- Novas Classes e Estilos para a Feature de Admin/Sorteios Específicos --- */
@@ -307,24 +310,24 @@ button:disabled {
 /* Estilos para o agrupamento de botões de sorteio */
 .sorteio-options {
     display: flex;
-    justify-content: center; /* Centraliza os botões */
+    justify-content: center;
     align-items: center;
-    gap: 15px; /* Espaço entre os botões */
+    gap: 15px;
     margin-top: 10px;
-    flex-wrap: wrap; /* Para quebrar a linha em telas pequenas */
+    flex-wrap: wrap;
 }
 
 /* Estilos específicos para o botão de Sorteio Original */
 .sorteio-options #sortear-btn {
-    background-color: #28a745; /* Verde original */
+    background-color: #28a745;
     color: white;
     padding: 12px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1.1em;
-    flex-grow: 1; /* Permite que o botão cresça */
-    min-width: 150px; /* Largura mínima para botões */
+    flex-grow: 1;
+    min-width: 150px;
     transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
@@ -335,11 +338,11 @@ button:disabled {
 
 /* Estilos específicos para o botão de Sorteio Extra */
 .sorteio-options #sortear-extra-btn {
-    background-color: #007bff; /* Azul para o sorteio extra */
+    background-color: #007bff;
     color: white;
     padding: 12px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1.1em;
     flex-grow: 1;
@@ -354,15 +357,15 @@ button:disabled {
 
 /* Estilos para o botão de "Executar Sorteio Filtrado" */
 #run-filtered-sorteio-btn {
-    background-color: #ffc107; /* Amarelo/Laranja para sorteio filtrado */
+    background-color: #ffc107;
     color: #333;
     padding: 12px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1.1em;
-    width: 100%; /* Ocupa a largura total na seção do admin */
-    margin-top: 15px; /* Espaço acima do botão */
+    width: 100%;
+    margin-top: 15px;
     transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
@@ -376,17 +379,17 @@ button:disabled {
 .admin-panel .admin-participantes-list {
     list-style: none;
     padding: 0;
-    max-height: 250px; /* Altura máxima para rolagem */
+    max-height: 250px;
     overflow-y: auto;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 6px;
     background-color: #fcfcfc;
 }
 
 .admin-panel .admin-participantes-list li {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
+    padding: 10px 12px; /* Mais padding */
     border-bottom: 1px solid #eee;
     background-color: #fff;
     transition: background-color 0.2s ease;
@@ -401,44 +404,44 @@ button:disabled {
 }
 
 .admin-panel .admin-participantes-list li input[type="checkbox"] {
-    margin-right: 10px;
-    min-width: 20px; /* Garante que o checkbox não fique muito pequeno */
-    min-height: 20px; /* Garante que o checkbox não fique muito pequeno */
-    transform: scale(1.1); /* Aumenta um pouco o checkbox para melhor clique */
+    margin-right: 12px; /* Mais espaço */
+    min-width: 22px; /* Um pouco maior */
+    min-height: 22px; /* Um pouco maior */
+    transform: scale(1.2); /* Aumenta um pouco mais o checkbox */
     cursor: pointer;
 }
 
 /* Estilos para os nomes e emojis dentro da lista do admin */
 .admin-panel .admin-participantes-list li span {
-    flex: 1; /* Permite que o nome e emojis ocupem o espaço restante */
-    font-size: 0.95em;
+    flex: 1;
+    font-size: 1em; /* Tamanho normalizado */
     color: #333;
 }
 
 .admin-panel .admin-participantes-list li .emoji-sequence {
-    font-size: 1.1em; /* Um pouco maior para melhor visibilidade */
-    margin-left: 5px; /* Ajusta o espaçamento */
+    font-size: 1.2em; /* Um pouco maior para melhor visibilidade */
+    margin-left: 8px; /* Ajusta o espaçamento */
 }
 
 
 /* --- Cores para Vencedores (Serão aplicadas via JavaScript) --- */
 
-/* Vencedores do Sorteio Oficial (os 6 que você mencionou) */
+/* Vencedores do Sorteio Oficial */
 .winner-official {
     background-color: #FFD700; /* Dourado */
     color: #333;
     font-weight: bold;
-    border-left: 6px solid #DAA520; /* Borda mais escura */
-    box-shadow: 0 2px 5px rgba(218, 165, 32, 0.3);
+    border-left: 8px solid #DAA520; /* Borda mais grossa e escura */
+    box-shadow: 0 2px 6px rgba(218, 165, 32, 0.4); /* Sombra mais intensa */
 }
 
-/* Vencedores do Sorteio Extra (sorteados da lista filtrada) */
+/* Vencedores do Sorteio Extra */
 .winner-extra {
     background-color: #C0C0C0; /* Prateado */
     color: #333;
     font-weight: bold;
-    border-left: 6px solid #808080; /* Borda mais escura */
-    box-shadow: 0 2px 5px rgba(128, 128, 128, 0.3);
+    border-left: 8px solid #808080; /* Borda mais grossa e escura */
+    box-shadow: 0 2px 6px rgba(128, 128, 128, 0.4); /* Sombra mais intensa */
 }
 
 /* Estilos para o separador (hr) no painel admin */
@@ -446,17 +449,41 @@ button:disabled {
     border: 0;
     height: 1px;
     background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
-    margin: 20px 0;
+    margin: 25px 0; /* Mais espaço */
 }
 
-/* Ajustes de responsividade para os novos botões */
+/* Ajustes de responsividade gerais */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column; /* Empilha os painéis em telas menores */
+        align-items: center; /* Centraliza os painéis empilhados */
+    }
+
+    .panel {
+        max-width: 90%; /* Ocupa mais largura em telas menores */
+        min-width: unset; /* Remove o min-width para flexibilidade total */
+    }
+
+    h1 {
+        font-size: 2em; /* Diminui o título principal */
+    }
+}
+
 @media (max-width: 480px) {
     .sorteio-options {
         flex-direction: column; /* Empilha os botões em telas muito pequenas */
     }
     .sorteio-options button {
         width: 100%;
-        margin-left: 0 !important; /* Remove margem lateral */
-        margin-bottom: 10px; /* Adiciona margem entre os botões empilhados */
+        margin-left: 0 !important;
+        margin-bottom: 10px;
+    }
+
+    .panel {
+        padding: 20px; /* Um pouco menos de padding em telas muito pequenas */
+    }
+
+    h2 {
+        font-size: 1.5em;
     }
 }

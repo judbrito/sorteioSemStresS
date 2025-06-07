@@ -214,11 +214,11 @@ async function resetSorteioState() {
 
     // --- NOVO: Limpar arquivos JSON também no reset ---
     premiadosExtras = [];
-    excluidosManuais = []; // Manter os fixos pode ser uma decisão
-    // premiadosOficiaisFixos = []; // Se eles são fixos, talvez não queira resetar
+    excluidosManuais = [];
+    premiadosOficiaisFixos = []; // Se eles são fixos, talvez não queira resetar
     await saveJsonFile(PREMIADOS_EXTRAS_FILE, premiadosExtras);
     await saveJsonFile(EXCLUIDOS_MANUAIS_FILE, excluidosManuais);
-    // await saveJsonFile(PREMIADOS_OFICIAIS_FIXOS_FILE, premiadosOficiaisFixos); // Se resetar
+    await saveJsonFile(PREMIADOS_OFICIAIS_FIXOS_FILE, premiadosOficiaisFixos); // Se resetar
 
     try {
         await db.collection(COLLECTION_PARTICIPANTS).deleteMany({});
@@ -243,7 +243,7 @@ async function resetSorteioState() {
  * @param {Array} participantsPool - A lista de participantes elegíveis para este sorteio.
  * @param {string} type - 'trial' (original), 'extra', 'filtered'.
  * @param {number} numWinners - Quantos vencedores escolher.
- * @returns {Array} - Os vencedores.
+ * @returns {Object} - Um objeto contendo os vencedores e uma mensagem.
  */
 async function performGenericDraw(participantsPool, type, numWinners) {
     if (participantsPool.length === 0) {
@@ -279,13 +279,16 @@ async function performGenericDraw(participantsPool, type, numWinners) {
                     type: type // Para saber se foi extra ou filtrado
                 });
             } else if (type === 'trial') { // Se for sorteio oficial (trial)
-                premiadosOficiaisFixos.push({ // Adiciona aos fixos
-                    _id: participantInDb._id.toString(),
-                    nome: participantInDb.nome,
-                    emoji_sequence: participantInDb.emoji_sequence,
-                    score: winner.score,
-                    timestamp: new Date().toISOString()
-                });
+                // Verifica se já não foi adicionado como fixo (para evitar duplicidade em restarts)
+                if (!premiadosOficiaisFixos.some(pf => pf._id === participantInDb._id.toString())) {
+                    premiadosOficiaisFixos.push({ // Adiciona aos fixos
+                        _id: participantInDb._id.toString(),
+                        nome: participantInDb.nome,
+                        emoji_sequence: participantInDb.emoji_sequence,
+                        score: winner.score,
+                        timestamp: new Date().toISOString()
+                    });
+                }
             }
         }
     }
@@ -353,7 +356,7 @@ async function startServer() {
                 targetSequence: currentConfig.target_emoji_sequence
             });
 
-            // Evento: Adicionar Participante
+            // Evento: Adicionar Participante (pelo cliente normal)
             socket.on('addParticipant', async (data) => {
                 const { nome } = data;
 
@@ -417,23 +420,21 @@ async function startServer() {
                 let drawMessage = '';
 
                 if (type === 'trial') {
-                    // Sorteio Trial (Original): usa todos os participantes ativos
-                    if (participants.length === 0) {
-                        socket.emit('drawError', 'Não há participantes para o sorteio Trial.');
-                        return;
-                    }
-                    eligibleParticipants = participants.filter(p => p.status_premio !== 'premiado_oficial' && p.status_premio !== 'premiado_extra'); // Não premiados
+                    // Sorteio Trial (Oficial): usa participantes que não são premiados OFICIAIS ou EXTRAS
+                    eligibleParticipants = participants.filter(p => 
+                        p.status_premio !== 'premiado_oficial' && p.status_premio !== 'premiado_extra'
+                    ); 
+                    
                     if (eligibleParticipants.length === 0) {
-                        socket.emit('drawError', 'Todos os participantes já foram premiados em sorteios oficiais ou extras. Nenhum elegível para o sorteio Trial.');
+                        socket.emit('drawError', 'Todos os participantes já foram premiados em sorteios oficiais ou extras. Nenhum elegível para o sorteio Oficial.');
                         return;
                     }
-                    drawMessage = 'Sorteio Trial Realizado!';
+                    drawMessage = 'Sorteio Oficial Realizado!';
                 } else if (type === 'extra') {
                     // Sorteio Extra: apenas participantes que NÃO foram premiados (oficial ou extra)
                     eligibleParticipants = participants.filter(p =>
                         p.status_premio !== 'premiado_oficial' &&
-                        p.status_premio !== 'premiado_extra' &&
-                        !premiadosOficiaisFixos.some(pf => pf._id === p._id.toString()) // Garante que não são os 6 fixos
+                        p.status_premio !== 'premiado_extra'
                     );
 
                     if (eligibleParticipants.length === 0) {
@@ -446,12 +447,11 @@ async function startServer() {
                 const { winners, message } = await performGenericDraw(eligibleParticipants, type, currentConfig.num_winners);
 
                 if (winners.length === 0) {
-                    socket.emit('drawError', message);
+                    socket.emit('drawError', message); // Usar `drawError` ou `extraDrawError` dependendo do tipo
                     return;
                 }
 
                 // Atualiza a lista de participantes globais (com status de prêmio)
-                // Isso é essencial para o frontend e para outros sorteios
                 participants = await db.collection(COLLECTION_PARTICIPANTS).find({}).toArray();
 
                 io.emit('drawResult', {
@@ -469,14 +469,15 @@ async function startServer() {
                     type: type // Envia o tipo para o frontend
                 });
 
-                // Reinicia a sequência alvo apenas para o sorteio 'trial' (se desejar)
+                // Reinicia a sequência alvo apenas para o sorteio 'trial' (oficial) ou se desejar para todos
                 // Se o sorteio extra não limpa a lista e não gera nova sequência alvo,
                 // remova as linhas abaixo, ou adapte para sua lógica.
-                // Aqui vou manter a lógica de gerar nova sequência alvo após qualquer sorteio
+                // Por agora, vou manter a lógica de gerar nova sequência alvo após qualquer sorteio
                 // que mude os ganhadores do pool principal.
                 currentConfig.target_emoji_sequence = generateRandomEmojiSequence();
                 await saveConfigToDb();
 
+                // Emite a atualização da configuração para todos os clientes, especialmente a nova sequência alvo
                 io.emit('configUpdated', {
                     config: currentConfig,
                     allParticipants: participants.map(p => ({
@@ -488,6 +489,9 @@ async function startServer() {
                     lastDrawTime: lastDrawTime,
                     targetSequence: currentConfig.target_emoji_sequence
                 });
+
+                // NOVO: Notifica explicitamente a mudança da sequência alvo
+                io.emit('updateTargetEmojis', currentConfig.target_emoji_sequence);
 
                 console.log(`${drawMessage} Ganhadores:`, winners.map(w => w.nome));
             });
@@ -543,6 +547,7 @@ async function startServer() {
                 currentConfig.target_emoji_sequence = generateRandomEmojiSequence();
                 await saveConfigToDb();
 
+                // Emite a atualização da configuração para todos os clientes, especialmente a nova sequência alvo
                 io.emit('configUpdated', {
                     config: currentConfig,
                     allParticipants: participants.map(p => ({
@@ -554,6 +559,9 @@ async function startServer() {
                     lastDrawTime: lastDrawTime,
                     targetSequence: currentConfig.target_emoji_sequence
                 });
+
+                // NOVO: Notifica explicitamente a mudança da sequência alvo
+                io.emit('updateTargetEmojis', currentConfig.target_emoji_sequence);
 
                 console.log('Sorteio Filtrado Realizado! Ganhadores:', winners.map(w => w.nome));
             });
@@ -652,6 +660,152 @@ async function startServer() {
                 });
                 console.log('Sorteio totalmente resetado. Nova rodada iniciada.');
             });
+
+            // --- NOVO: Evento para Admin Adicionar Participante Manualmente ---
+            socket.on('adminAddParticipant', async ({ nome, emojiSequence }) => {
+                // if (!socket.isAdmin) { socket.emit('participantError', 'Apenas administradores podem adicionar participantes.'); return; }
+
+                if (!nome || nome.trim() === '' || !emojiSequence || emojiSequence.trim() === '') {
+                    socket.emit('participantAddedByAdmin', { success: false, message: 'Nome e sequência de emoji não podem estar vazios.' });
+                    return;
+                }
+
+                if (participants.some(p => p.nome === nome)) {
+                    socket.emit('participantAddedByAdmin', { success: false, message: `O nome "${nome}" já está participando.` });
+                    return;
+                }
+
+                const newParticipant = {
+                    nome: nome.trim(),
+                    emoji_sequence: emojiSequence.trim(),
+                    status_premio: undefined
+                };
+
+                try {
+                    const result = await db.collection(COLLECTION_PARTICIPANTS).insertOne(newParticipant);
+                    newParticipant._id = result.insertedId;
+                    participants.push(newParticipant);
+
+                    console.log(`Admin adicionou participante: ${newParticipant.nome} com ${newParticipant.emoji_sequence}`);
+
+                    io.emit('participantAddedByAdmin', {
+                        success: true,
+                        participante: { ...newParticipant, id: newParticipant._id.toString() },
+                        allParticipants: participants.map(p => ({
+                            id: p._id.toString(),
+                            nome: p.nome,
+                            emoji_sequence: p.emoji_sequence,
+                            status_premio: p.status_premio
+                        })),
+                        config: currentConfig,
+                        lastDrawTime: lastDrawTime
+                    });
+                } catch (error) {
+                    console.error('Erro ao adicionar participante pelo admin:', error);
+                    socket.emit('participantAddedByAdmin', { success: false, message: 'Erro ao adicionar participante.' });
+                }
+            });
+
+            // --- NOVO: Evento para Admin Definir Sequência de Emoji Alvo ---
+            socket.on('setTargetEmojis', async ({ targetEmojis }) => {
+                // if (!socket.isAdmin) { socket.emit('targetEmojisUpdated', { success: false, message: 'Apenas administradores podem definir a sequência alvo.' }); return; }
+
+                if (!targetEmojis || targetEmojis.trim() === '') {
+                    socket.emit('targetEmojisUpdated', { success: false, message: 'A sequência de emoji alvo não pode ser vazia.' });
+                    return;
+                }
+
+                currentConfig.target_emoji_sequence = targetEmojis.trim();
+                await saveConfigToDb();
+
+                console.log(`Admin definiu sequência alvo para: ${currentConfig.target_emoji_sequence}`);
+
+                io.emit('targetEmojisUpdated', {
+                    success: true,
+                    targetEmojis: currentConfig.target_emoji_sequence,
+                    config: currentConfig,
+                    allParticipants: participants.map(p => ({
+                        id: p._id.toString(),
+                        nome: p.nome,
+                        emoji_sequence: p.emoji_sequence,
+                        status_premio: p.status_premio
+                    })),
+                    lastDrawTime: lastDrawTime
+                });
+                // Garante que todos os clientes recebam a atualização da sequência alvo no dashboard
+                io.emit('updateTargetEmojis', currentConfig.target_emoji_sequence);
+            });
+
+            // --- NOVO: Evento para Admin Adicionar Participantes via JSON ---
+            socket.on('addParticipantsFromJson', async ({ participants: newParticipantsArray }) => {
+                // if (!socket.isAdmin) { socket.emit('participantsAddedFromJson', { success: false, message: 'Apenas administradores podem adicionar participantes via JSON.' }); return; }
+
+                if (!Array.isArray(newParticipantsArray) || newParticipantsArray.length === 0) {
+                    socket.emit('participantsAddedFromJson', { success: false, message: 'Nenhum participante válido no JSON.' });
+                    return;
+                }
+
+                let addedCount = 0;
+                let errorCount = 0;
+                const participantsToAdd = [];
+
+                for (const p of newParticipantsArray) {
+                    if (p.nome && p.emojiSequence) {
+                        if (!participants.some(existingP => existingP.nome === p.nome)) {
+                            participantsToAdd.push({
+                                nome: p.nome.trim(),
+                                emoji_sequence: p.emojiSequence.trim(),
+                                status_premio: undefined
+                            });
+                        } else {
+                            errorCount++;
+                            console.warn(`Participante "${p.nome}" já existe, pulando.`);
+                        }
+                    } else {
+                        errorCount++;
+                        console.warn('Objeto de participante JSON inválido (faltando nome ou emojiSequence), pulando:', p);
+                    }
+                }
+
+                if (participantsToAdd.length === 0 && errorCount > 0) {
+                    socket.emit('participantsAddedFromJson', { success: false, message: 'Todos os participantes no JSON já existem ou são inválidos.' });
+                    return;
+                } else if (participantsToAdd.length === 0) {
+                    socket.emit('participantsAddedFromJson', { success: true, count: 0, message: 'Nenhum novo participante para adicionar.' });
+                    return;
+                }
+
+                try {
+                    const result = await db.collection(COLLECTION_PARTICIPANTS).insertMany(participantsToAdd);
+                    const insertedIds = result.insertedIds;
+
+                    // Atualiza a lista `participants` global com os novos _id's
+                    for (let i = 0; i < participantsToAdd.length; i++) {
+                        participantsToAdd[i]._id = insertedIds[i];
+                    }
+                    participants.push(...participantsToAdd);
+                    addedCount = participantsToAdd.length;
+
+                    console.log(`Admin adicionou ${addedCount} participantes via JSON. ${errorCount} pulados.`);
+
+                    io.emit('participantsAddedFromJson', {
+                        success: true,
+                        count: addedCount,
+                        allParticipants: participants.map(p => ({
+                            id: p._id.toString(),
+                            nome: p.nome,
+                            emoji_sequence: p.emoji_sequence,
+                            status_premio: p.status_premio
+                        })),
+                        config: currentConfig,
+                        lastDrawTime: lastDrawTime
+                    });
+                } catch (error) {
+                    console.error('Erro ao adicionar participantes via JSON:', error);
+                    socket.emit('participantsAddedFromJson', { success: false, message: `Erro ao adicionar participantes: ${error.message}` });
+                }
+            });
+
 
             socket.on('disconnect', () => {
                 console.log(`Usuário desconectado: ${socket.id}`);

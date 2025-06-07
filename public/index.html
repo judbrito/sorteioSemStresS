@@ -19,7 +19,7 @@
             </div>
 
             <div class="dashboard-info" style="margin-top: 15px; padding: 10px; background-color: #e0f7fa; border-radius: 8px;">
-                <strong>Sequência Alvo Atual:</strong> <span id="target-emoji-sequence" style="font-size: 1.8em; font-weight: bold; color: #00796b;"></span>
+                <strong>Sequência Alvo Atual:</strong> <span id="target-emoji-sequence" style="font-size: 1.8em; font-weight: bold; color: #00796b;">❓❓❓❓❓</span>
             </div>
 
             <div class="form-group">
@@ -80,11 +80,44 @@
                 <button id="update-config-btn">Atualizar Configurações</button>
                 <button id="reset-sorteio-btn" class="danger-btn">Resetar Sorteio (Apaga tudo!)</button>
 
-                <hr style="margin: 20px 0;"> <h3>Gerenciar Participantes para Sorteios Específicos</h3>
+                <hr style="margin: 20px 0;">
+                <h3>Gerenciar Participantes para Sorteios Específicos</h3>
                 <p>Selecione os participantes que **NÃO** devem ser incluídos no próximo sorteio (marcar para ignorar):</p>
                 <ul id="admin-participantes-list" class="admin-participantes-list">
-                    </ul>
+                </ul>
                 <button id="run-filtered-sorteio-btn" class="primary-btn" style="margin-top: 10px;">Executar Sorteio Filtrado (Excluir Selecionados)</button>
+
+                <hr style="margin: 20px 0;">
+                <h3>Adicionar Participante Manualmente</h3>
+                <div class="form-group">
+                    <label for="admin-add-name">Nome do Participante:</label>
+                    <input type="text" id="admin-add-name" placeholder="Nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="admin-add-emojis">Sequência de Emojis:</label>
+                    <input type="text" id="admin-add-emojis" placeholder="Ex: 🐘🐒🦊🐠🐻" required>
+                </div>
+                <button id="admin-add-participant-btn" class="primary-btn">Adicionar Participante</button>
+                <div id="admin-add-participant-message" class="hidden message"></div>
+
+                <hr style="margin: 20px 0;">
+                <h3>Configurar Sorteio e Participantes (Admin)</h3>
+                <div class="form-group">
+                    <label for="admin-target-emojis">Sequência de Emoji Alvo:</label>
+                    <input type="text" id="admin-target-emojis" placeholder="Ex: 🎯✨🏆" required>
+                </div>
+                <button id="set-target-emojis-btn" class="primary-btn">Definir Emoji Alvo</button>
+                <div id="target-emojis-message" class="hidden message"></div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="admin-json-participants">Adicionar Participantes via JSON:</label>
+                    <textarea id="admin-json-participants" rows="10" placeholder='[
+    { "nome": "Nome1", "emojiSequence": "🌟🚀🎉" },
+    { "nome": "Nome2", "emojiSequence": "💡🔗🌍" }
+]'></textarea>
+                </div>
+                <button id="add-json-participants-btn" class="primary-btn">Carregar Participantes do JSON</button>
+                <div id="json-participants-message" class="hidden message"></div>
             </div>
         </div>
 

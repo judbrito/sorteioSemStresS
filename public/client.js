@@ -31,19 +31,36 @@ const sortearExtraBtn = document.getElementById('sortear-extra-btn');
 const adminParticipantesList = document.getElementById('admin-participantes-list');
 const runFilteredSorteioBtn = document.getElementById('run-filtered-sorteio-btn');
 
+// Elementos para adicionar participante manualmente
+const adminAddNameInput = document.getElementById('admin-add-name');
+const adminAddEmojisInput = document.getElementById('admin-add-emojis');
+const adminAddParticipantBtn = document.getElementById('admin-add-participant-btn');
+const adminAddParticipantMessage = document.getElementById('admin-add-participant-message');
+
+// Elementos para definir a sequência de emoji alvo
+const adminTargetEmojisInput = document.getElementById('admin-target-emojis');
+const setTargetEmojisBtn = document.getElementById('set-target-emojis-btn');
+const targetEmojisMessage = document.getElementById('target-emojis-message');
+
+// Elementos para adicionar participantes via JSON
+const adminJsonParticipantsTextarea = document.getElementById('admin-json-participants');
+const addJsonParticipantsBtn = document.getElementById('add-json-participants-btn');
+const jsonParticipantsMessage = document.getElementById('json-participants-message');
+
 // --- NOVO: Variável global para armazenar participantes do admin (para seleção) ---
 let currentAdminParticipants = [];
 
 // --- Funções de UI ---
 
+// MODIFICADO: Função displayMessage para usar a classe 'hidden' e as cores CSS
 function displayMessage(element, msg, type) {
     element.textContent = msg;
-    element.className = ''; // Limpa classes anteriores
-    element.classList.add(type); // Adiciona a nova classe (success ou error)
-    element.style.display = 'block'; // Garante que a mensagem é visível
+    element.className = 'message'; // Limpa classes anteriores e adiciona 'message'
+    element.classList.add(type); // Adiciona a nova classe (success, error, info)
+    element.classList.remove('hidden'); // Remove a classe 'hidden' para exibir
     setTimeout(() => {
-        element.style.display = 'none';
-        element.textContent = '';
+        element.classList.add('hidden'); // Adiciona 'hidden' de volta para ocultar
+        element.textContent = ''; // Limpa o texto após ocultar
     }, 5000); // Mensagem desaparece após 5 segundos
 }
 
@@ -59,8 +76,7 @@ function updateAdminParticipantsList(participants) {
             checkbox.value = p.id;
             checkbox.name = 'excludedParticipants';
 
-            // NOVO: Desabilitar checkbox se o participante já for um ganhador oficial
-            // Assumimos que o status_premio vem do server
+            // Desabilitar checkbox se o participante já for um ganhador oficial
             if (p.status_premio === 'premiado_oficial') {
                 checkbox.disabled = true;
                 li.classList.add('winner-official-checkbox-disabled'); // Opcional: Adicionar classe para estilizar
@@ -185,7 +201,8 @@ function updateDashboardInfo(config, participantsCount, lastDrawTime) {
     limiteParticipantesSpan.textContent = config.limite_participantes;
     newLimitInput.value = config.limite_participantes;
     numWinnersInput.value = config.num_winners;
-    targetEmojiSequenceSpan.textContent = config.target_emoji_sequence;
+    targetEmojiSequenceSpan.textContent = config.target_emoji_sequence; // ATUALIZADO: para o dashboard principal
+    adminTargetEmojisInput.value = config.target_emoji_sequence; // NOVO: para o campo do admin
     if (lastDrawTime) {
         lastDrawTimeSpan.textContent = new Date(lastDrawTime).toLocaleString('pt-BR');
     } else {
@@ -248,6 +265,70 @@ resetSorteioBtn.addEventListener('click', () => {
     }
 });
 
+// --- NOVO: Event Listener para adicionar participante manualmente (Admin) ---
+if (adminAddParticipantBtn) {
+    adminAddParticipantBtn.addEventListener('click', () => {
+        const nome = adminAddNameInput.value.trim();
+        const emojiSequence = adminAddEmojisInput.value.trim();
+
+        if (!nome || !emojiSequence) {
+            displayMessage(adminAddParticipantMessage, 'Por favor, preencha o nome e a sequência de emojis.', 'error');
+            return;
+        }
+
+        socket.emit('adminAddParticipant', { nome, emojiSequence });
+        displayMessage(adminAddParticipantMessage, 'Enviando...', 'info');
+    });
+}
+
+// --- NOVO: Event Listener para definir a Sequência de Emoji Alvo (Admin) ---
+if (setTargetEmojisBtn) {
+    setTargetEmojisBtn.addEventListener('click', () => {
+        const targetEmojis = adminTargetEmojisInput.value.trim();
+
+        if (!targetEmojis) {
+            displayMessage(targetEmojisMessage, 'Por favor, insira a sequência de emoji alvo.', 'error');
+            return;
+        }
+
+        socket.emit('setTargetEmojis', { targetEmojis });
+        displayMessage(targetEmojisMessage, 'Enviando...', 'info');
+    });
+}
+
+// --- NOVO: Event Listener para carregar Participantes via JSON (Admin) ---
+if (addJsonParticipantsBtn) {
+    addJsonParticipantsBtn.addEventListener('click', () => {
+        const jsonString = adminJsonParticipantsTextarea.value.trim();
+
+        if (!jsonString) {
+            displayMessage(jsonParticipantsMessage, 'Por favor, cole o JSON dos participantes.', 'error');
+            return;
+        }
+
+        try {
+            const participants = JSON.parse(jsonString);
+            if (!Array.isArray(participants)) {
+                displayMessage(jsonParticipantsMessage, 'O JSON deve ser um array de participantes.', 'error');
+                return;
+            }
+            // Verifica se cada item no array tem 'nome' e 'emojiSequence'
+            const isValid = participants.every(p => p.nome && p.emojiSequence);
+            if (!isValid) {
+                displayMessage(jsonParticipantsMessage, 'Cada participante no JSON deve ter "nome" e "emojiSequence".', 'error');
+                return;
+            }
+
+            socket.emit('addParticipantsFromJson', { participants });
+            displayMessage(jsonParticipantsMessage, 'Enviando participantes...', 'info');
+
+        } catch (e) {
+            displayMessage(jsonParticipantsMessage, 'JSON inválido. Verifique a sintaxe.', 'error');
+        }
+    });
+}
+
+
 // --- Listeners de Eventos do Socket.IO ---
 
 socket.on('initialData', (data) => {
@@ -256,6 +337,7 @@ socket.on('initialData', (data) => {
     updateLastDrawInfo(data.lastDrawTime, data.lastWinners);
     updateSorteioHistory(data.history);
     targetEmojiSequenceSpan.textContent = data.config.target_emoji_sequence;
+    adminTargetEmojisInput.value = data.config.target_emoji_sequence; // Preenche o campo do admin
     sortearBtn.disabled = true; // Inicia desabilitado, apenas admin logado habilita
 });
 
@@ -263,7 +345,10 @@ socket.on('participantAdded', (data) => {
     displayMessage(messageDiv, `Você entrou no sorteio, ${data.nome}! Sua sequência: ${data.emoji_sequence}`, 'success');
     updateParticipantsList(data.allParticipants);
     updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime);
-    targetEmojiSequenceSpan.textContent = data.targetSequence;
+    // targetEmojiSequenceSpan.textContent = data.targetSequence; // Removido, já atualizado por updateDashboardInfo
+    if (adminControlsSection.style.display === 'block') { // Se o admin estiver logado
+        socket.emit('requestAdminParticipants'); // Pede a lista atualizada para o admin
+    }
 });
 
 socket.on('participantError', (message) => {
@@ -272,12 +357,12 @@ socket.on('participantError', (message) => {
 
 // MODIFICADO: drawResult agora pode lidar com diferentes tipos de sorteio e atualizar a lista de admin
 socket.on('drawResult', (data) => {
-    displayMessage(messageDiv, `Sorteio "${data.type === 'extra' ? 'Extra' : 'Trial'}" Realizado! Veja os ganhadores!`, 'success'); // NOVO: Mensagem mais clara
+    displayMessage(messageDiv, `Sorteio "${data.type === 'extra' ? 'Extra' : 'Oficial'}" Realizado! Veja os ganhadores!`, 'success'); // NOVO: Mensagem mais clara
     updateLastDrawInfo(data.lastDrawTime, data.winners);
     updateParticipantsList(data.allParticipants); // Atualiza a lista principal com status de premiação
     updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime);
     updateSorteioHistory(data.history);
-    targetEmojiSequenceSpan.textContent = data.targetSequence;
+    // targetEmojiSequenceSpan.textContent = data.targetSequence; // Removido, já atualizado por updateDashboardInfo
     
     // NOVO: Se for admin logado, atualiza a lista do admin também
     if (adminControlsSection.style.display === 'block') {
@@ -288,12 +373,11 @@ socket.on('drawResult', (data) => {
 // NOVO: drawFilteredResult - para sorteios filtrados
 socket.on('drawFilteredResult', (data) => {
     displayMessage(adminMessage, 'Sorteio Filtrado Realizado com Sucesso!', 'success');
-    // Você pode querer exibir os resultados específicos do sorteio filtrado em um local diferente ou no histórico geral
     updateLastDrawInfo(data.lastDrawTime, data.winners); // Atualiza a área de últimos ganhadores
     updateParticipantsList(data.allParticipants); // Atualiza a lista principal com status de premiação
     updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime);
     updateSorteioHistory(data.history);
-    targetEmojiSequenceSpan.textContent = data.targetSequence;
+    // targetEmojiSequenceSpan.textContent = data.targetSequence; // Removido, já atualizado por updateDashboardInfo
 
     // Se for admin logado, atualiza a lista do admin também
     if (adminControlsSection.style.display === 'block') {
@@ -313,7 +397,7 @@ socket.on('adminLoginSuccess', (data) => {
     sortearExtraBtn.style.display = 'inline-block'; // NOVO: Mostra o botão de sorteio extra
     
     updateDashboardInfo(data.config, data.participantes.length, data.lastDrawTime);
-    targetEmojiSequenceSpan.textContent = data.targetSequence;
+    // targetEmojiSequenceSpan.textContent = data.targetSequence; // Removido, já atualizado por updateDashboardInfo
 
     // NOVO: Solicita a lista de participantes para o painel admin após o login
     socket.emit('requestAdminParticipants');
@@ -326,7 +410,7 @@ socket.on('adminLoginFailed', (message) => {
 socket.on('configUpdated', (data) => {
     displayMessage(adminMessage, 'Configurações atualizadas com sucesso!', 'success');
     updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime);
-    targetEmojiSequenceSpan.textContent = data.targetSequence;
+    // targetEmojiSequenceSpan.textContent = data.targetSequence; // Removido, já atualizado por updateDashboardInfo
 });
 
 socket.on('configError', (message) => {
@@ -339,7 +423,7 @@ socket.on('sorteioReset', (data) => {
     updateParticipantsList(data.allParticipants);
     updateLastDrawInfo(data.lastDrawTime, data.lastWinners);
     updateSorteioHistory(data.history);
-    targetEmojiSequenceSpan.textContent = data.targetSequence;
+    // targetEmojiSequenceSpan.textContent = data.targetSequence; // Removido, já atualizado por updateDashboardInfo
 
     // NOVO: Limpa e re-popula a lista de admin após o reset
     if (adminControlsSection.style.display === 'block') {
@@ -352,6 +436,43 @@ socket.on('adminParticipantsList', (participants) => {
     updateAdminParticipantsList(participants);
 });
 
+// --- NOVO: Listener para receber a confirmação de adição de participante pelo admin ---
+socket.on('participantAddedByAdmin', (data) => {
+    if (data.success) {
+        displayMessage(adminAddParticipantMessage, `Participante "${data.participante.nome}" adicionado com sucesso!`, 'success');
+        adminAddNameInput.value = ''; // Limpa os campos
+        adminAddEmojisInput.value = '';
+        updateParticipantsList(data.allParticipants); // Atualiza a lista principal
+        updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime); // Atualiza o dashboard
+        socket.emit('requestAdminParticipants'); // Solicita a lista de admin atualizada
+    } else {
+        displayMessage(adminAddParticipantMessage, `Erro: ${data.message}`, 'error');
+    }
+});
+
+// --- NOVO: Listener para receber a confirmação de sequência de emoji alvo atualizada ---
+socket.on('targetEmojisUpdated', (data) => {
+    if (data.success) {
+        displayMessage(targetEmojisMessage, `Sequência de Emoji Alvo definida para: ${data.targetEmojis}`, 'success');
+        updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime); // Atualiza o dashboard e o campo do admin
+    } else {
+        displayMessage(targetEmojisMessage, `Erro: ${data.message}`, 'error');
+    }
+});
+
+// --- NOVO: Listener para receber a confirmação de participantes adicionados via JSON ---
+socket.on('participantsAddedFromJson', (data) => {
+    if (data.success) {
+        displayMessage(jsonParticipantsMessage, `Adicionados ${data.count} participantes do JSON.`, 'success');
+        adminJsonParticipantsTextarea.value = ''; // Limpa o campo
+        updateParticipantsList(data.allParticipants); // Atualiza a lista principal
+        updateDashboardInfo(data.config, data.allParticipants.length, data.lastDrawTime); // Atualiza o dashboard
+        socket.emit('requestAdminParticipants'); // Solicita a lista de admin atualizada
+    } else {
+        displayMessage(jsonParticipantsMessage, `Erro ao adicionar JSON: ${data.message}`, 'error');
+    }
+});
+
 // --- NOVO: Listener para erros específicos de sorteio filtrado/extra
 socket.on('filteredDrawError', (message) => {
     displayMessage(adminMessage, message, 'error');
@@ -359,4 +480,13 @@ socket.on('filteredDrawError', (message) => {
 
 socket.on('extraDrawError', (message) => {
     displayMessage(adminMessage, message, 'error');
+});
+
+// --- NOVO: Listener para atualizar a sequência alvo em todos os clientes ---
+socket.on('updateTargetEmojis', (targetEmojis) => {
+    targetEmojiSequenceSpan.textContent = targetEmojis;
+    // Se o admin estiver logado, atualiza o campo dele também
+    if (adminControlsSection.style.display === 'block') {
+        adminTargetEmojisInput.value = targetEmojis;
+    }
 });
