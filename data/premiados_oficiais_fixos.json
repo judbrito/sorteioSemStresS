@@ -1,0 +1,86 @@
+[
+  {
+    "_id": "6842f9b32dd6ae2dab9ec2b0",
+    "nome": "Lima",
+    "emoji_sequence": "🐒🍓🦒🥝🍓",
+    "score": 5,
+    "timestamp": "2025-06-07T12:21:18.183Z"
+  },
+  {
+    "_id": "6842fb532dd6ae2dab9ec2b2",
+    "nome": "Black",
+    "emoji_sequence": "🦉🍎🍌🦓🍓",
+    "score": 5,
+    "timestamp": "2025-06-07T12:21:18.216Z"
+  },
+  {
+    "_id": "6842f8ae2dd6ae2dab9ec2ac",
+    "nome": "srkuro",
+    "emoji_sequence": "🐅🦊🦊🥝🍎",
+    "score": 3,
+    "timestamp": "2025-06-07T12:21:18.249Z"
+  },
+  {
+    "_id": "68436b0b30a8cc7ac720f2eb",
+    "nome": "Bala",
+    "emoji_sequence": "🦁🐒🐠🍊🍇",
+    "score": 3,
+    "timestamp": "2025-06-07T12:21:18.282Z"
+  },
+  {
+    "_id": "68437e75395c4c6bf9720eed",
+    "nome": "HeRcUlEz",
+    "emoji_sequence": "🦋🦒🐠🥭🦋",
+    "score": 3,
+    "timestamp": "2025-06-07T12:21:18.316Z"
+  },
+  {
+    "_id": "6842f8a32dd6ae2dab9ec2ab",
+    "nome": "MICHEL_TEMER",
+    "emoji_sequence": "🦒🐘🐅🦁🥝",
+    "score": 2,
+    "timestamp": "2025-06-07T12:21:18.351Z"
+  },
+  {
+    "_id": "6842f8e92dd6ae2dab9ec2ae",
+    "nome": "Lucas Figueredo",
+    "emoji_sequence": "🐠🦉🥭🥝🐻",
+    "score": 2,
+    "timestamp": "2025-06-07T12:21:18.385Z"
+  },
+  {
+    "_id": "684313a32cda1436594e014b",
+    "nome": "Arunn@",
+    "emoji_sequence": "🦋🐅🐘🦒🦁",
+    "score": 2,
+    "timestamp": "2025-06-07T12:21:18.417Z"
+  },
+  {
+    "_id": "684431918d78a081770a8b1f",
+    "nome": "dfadsfdsaffasdfasdfdfdsfadfadsfadsfsdfasdfasdfaasdfasdfadsfdsasasdfasdfadsfasdd",
+    "emoji_sequence": "🦋🐒🍍🍊🐻",
+    "score": 1,
+    "timestamp": "2025-06-07T12:36:00.053Z"
+  },
+  {
+    "_id": "684432b08d78a081770a8b24",
+    "nome": "dfadfdasfdfasdfadsfads",
+    "emoji_sequence": "🐘🦋🦊🐒🍊",
+    "score": 2,
+    "timestamp": "2025-06-07T12:39:08.793Z"
+  },
+  {
+    "_id": "684432b28d78a081770a8b25",
+    "nome": "dfadfdasfdfasdfdsafdasfdasadsfads",
+    "emoji_sequence": "🦉🦓🍇🐅🍌",
+    "score": 2,
+    "timestamp": "2025-06-07T12:39:08.823Z"
+  },
+  {
+    "_id": "684432b68d78a081770a8b28",
+    "nome": "dfadfdasfdfasdfaadsfadsfasdfasdsfadsfadsfadsdsdsafadsfadsfafdasfdasadsfads",
+    "emoji_sequence": "🍇🍌🍊🍇🐘",
+    "score": 2,
+    "timestamp": "2025-06-07T12:39:08.855Z"
+  }
+]

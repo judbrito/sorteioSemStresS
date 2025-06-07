@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio de Emojis</title>
     <link rel="stylesheet" href="style.css">
-
-    </head>
+</head>
 <body>
     <div class="container">
         <h1>Sorteio da Melhor Sequência de Emojis!</h1>
@@ -33,20 +32,22 @@
 
         <div class="panel">
             <h2>Ação do Sorteio</h2>
-            <button id="sortear-btn">Realizar Sorteio Agora!</button>
+            <div class="sorteio-options">
+                <button id="sortear-btn">Realizar Sorteio Agora!</button>
+                <button id="sortear-extra-btn" style="display: none; margin-left: 10px;">Realizar Sorteio Extra</button>
+            </div>
             <div id="winner-board" style="display: none; margin-top: 20px;">
                 <h3>🎉 Últimos Ganhadores! 🎉</h3>
                 <p>Sorteio realizado em: <span id="last-draw-time">N/A</span></p>
                 <ul class="winner-list" id="ganhadores-list">
-                    </ul>
+                </ul>
             </div>
         </div>
-
 
         <div class="panel">
             <h2>Participantes Cadastrados</h2>
             <ul id="participantes-list">
-                </ul>
+            </ul>
         </div>
 
         <div class="panel admin-panel">
@@ -78,13 +79,19 @@
                 </div>
                 <button id="update-config-btn">Atualizar Configurações</button>
                 <button id="reset-sorteio-btn" class="danger-btn">Resetar Sorteio (Apaga tudo!)</button>
+
+                <hr style="margin: 20px 0;"> <h3>Gerenciar Participantes para Sorteios Específicos</h3>
+                <p>Selecione os participantes que **NÃO** devem ser incluídos no próximo sorteio (marcar para ignorar):</p>
+                <ul id="admin-participantes-list" class="admin-participantes-list">
+                    </ul>
+                <button id="run-filtered-sorteio-btn" class="primary-btn" style="margin-top: 10px;">Executar Sorteio Filtrado (Excluir Selecionados)</button>
             </div>
         </div>
 
         <div class="panel">
             <h2>Histórico de Sorteios</h2>
             <ul id="sorteios-list">
-                </ul>
+            </ul>
         </div>
     </div>
 
